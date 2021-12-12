@@ -2,6 +2,7 @@ import random
 import requests
 import string
 import pickle
+import streamlit as st
 
 # function to get a either a dad joke or an evil insult at random
 def get_text():
@@ -26,6 +27,12 @@ def get_text():
             continue
     return text
 
+# function to load the model
+def load_model(model_name):
+    with open(model_name, "rb") as file:
+        model = pickle.load(file)
+    return model
+
 # function to preprocess the text
 def preprocess(text):
     # convert to lower case
@@ -44,23 +51,24 @@ def joke_or_insult(text, model):
     return (prediction, proba)
 
 
-# get the text
-text = get_text()
-print(text)
+st.header("Is it a DAD JOKE or an EVIL INSULT???")
+# laod the model
+model = load_model("knn_model.pkl")
 
-# preprocess the text before passing it to the model
-text = preprocess(text)
-
-# load the saved model
-with open('knn_model.pkl', 'rb') as file:
-    model = pickle.load(file)
-
-# predict using the model
-pred, proba = joke_or_insult(text, model)
-# print the result
-class_map = {0: 'Joke', 1: 'Insult'}
-article_map = {0: 'a', 1: 'an'}
-print("The above text is {} {} with probability {:.2f}%".format(article_map[pred], 
-                                                                class_map[pred], 
-                                                                proba[pred]*100))
+# get the text from api
+if st.button("Generate Text!"):
+    text = get_text()
+    # display the text
+    st.title(text.replace('\n', ' '))
+    # preprocess the text 
+    text = preprocess(text)
+    # predict using the model
+    pred, proba = joke_or_insult(text, model)
+    # print the result
+    class_map = {0: 'Joke', 1: 'Insult'}
+    article_map = {0: 'a', 1: 'an'}
+    result = "The above text is {} {} with probability {:.2f}%".format(article_map[pred], 
+                                                                    class_map[pred], 
+                                                                    proba[pred]*100)
+    st.write(result)
 
